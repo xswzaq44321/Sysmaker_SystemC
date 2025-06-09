@@ -21,8 +21,8 @@ else
 endif
 
 # 編譯參數
-CXXFLAGS := $(COMMON_FLAGS) -MMD -MP -I$(SYSTEMC_HOME)/include -Iinclude
-CFLAGS   := $(COMMON_FLAGS) -MMD -MP -I$(SYSTEMC_HOME)/include -Iinclude
+CXXFLAGS := $(COMMON_FLAGS) -std=c++17 -MMD -MP -I$(SYSTEMC_HOME)/include -Iinclude
+CFLAGS   := $(COMMON_FLAGS) -std=c++17 -MMD -MP -I$(SYSTEMC_HOME)/include -Iinclude
 LDFLAGS  := -L$(SYSTEMC_HOME)/lib-linux64 -lsystemc -lm
 
 # 資料夾路徑
@@ -52,20 +52,20 @@ info:
 
 # 連結執行檔
 $(TARGET): $(OBJECTS)
-	@echo "🔗 Linking $@"
-	$(LD) $^ $(LDFLAGS) -o $@
+	@printf "🔗 Linking $@\n    $(LD) $^ $(LDFLAGS) -o $@"
+	@$(LD) $^ $(LDFLAGS) -o $@
 
 # 編譯 .cpp → .o
 $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp
 	@mkdir -p $(dir $@)
-	@echo "🛠️  Compiling C++: $<"
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	@printf "🛠️  Compiling C++: $<\n    $(CXX) $(CXXFLAGS) -c $< -o $@\n"
+	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # 編譯 .c → .o
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(dir $@)
-	@echo "🛠️  Compiling C  : $<"
-	$(CC) $(CFLAGS) -c $< -o $@
+	@printf "🛠️  Compiling C  : $<\n    $(CC) $(CFLAGS) -c $< -o $@\n"
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 # 載入 .d 檔來追蹤 header 相依性
 -include $(DEPS)

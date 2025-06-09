@@ -1,29 +1,26 @@
-# SystemC 專案說明
+# SystemC Project Description
 
-這是一個簡單的 SystemC 專案結構，使用 GNU Make 管理編譯流程。
-
----
-
-## 📁 專案結構規則
-
-- 所有 `.cpp` 原始碼請放在 `source/` 資料夾（可含子資料夾）
-- 所有 `.h` 標頭檔請放在 `include/` 資料夾（可含子資料夾）
-- 編譯後的 `.o` 檔與中間檔會放在 `build/` 資料夾中
-- 最終執行檔會放在專案根目錄
+This is a simple SystemC project structure managed using GNU Make.
 
 ---
 
-## 🔧 編譯方式
+## 📁 Project Structure Guidelines
 
-請先設定 SystemC 安裝路徑：
+- All `.cpp` source files should be placed in the `source/` directory (subdirectories are allowed)
+- All `.h` header files should be placed in the `include/` directory (subdirectories are allowed)
+- Compiled `.o` object files and intermediate files will be stored in the `build/` directory
+- The final executable will be placed in the project root directory
 
-```bash
-export SYSTEMC_HOME=~/workspace/SystemC
+---
+
+## 🔧 Build Instructions
+
+Please ensure that SystemC is installed and the `$SYSTEMC_HOME` environment variable is correctly set.  
+Then run the following commands:
+
+```
+make clean  # Remove intermediate files and the executable
+make        # Compile
 ```
 
-然後執行：
-```
-make         # 編譯
-make clean   # 清除中間檔與執行檔
-```
-執行檔預設名稱為 main。
+The default name of the executable is `main`.
