@@ -2,6 +2,8 @@
 #include <set>
 #include <string>
 
+#include "peripherals/UART/driver.hpp"
+
 using namespace std;
 
 top::top(sc_module_name name)
@@ -13,8 +15,8 @@ top::top(sc_module_name name)
 
     initiator = std::make_unique<PCB_Initiator>("initiator");
     virt_pcb  = std::make_unique<PCB_Interconnect>("virt_pcb");
-    targetA   = std::make_unique<PCB_Target_IF>("targetA", pcb::pins_t { "PE2", "PE5", "PE6", "PG13" });
-    targetB   = std::make_unique<PCB_Target_IF>("targetB", pcb::pins_t { "PE2", "PE5", "PE6", "PG14" });
+    targetA   = std::make_unique<UART_Driver>("targetA", pcb::pin_config_t { { "PB2", "TX" }, { "PB3", "RX" } });
+    targetB   = std::make_unique<UART_Driver>("targetB", pcb::pin_config_t { { "PB2", "RX" }, { "PB3", "TX" } });
 
     initiator->socket.bind(virt_pcb->targ_socket);
     virt_pcb->bind_target(*targetA, targetA->socket);

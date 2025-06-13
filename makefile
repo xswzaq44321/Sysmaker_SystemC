@@ -52,19 +52,22 @@ info:
 
 # 連結執行檔
 $(TARGET): $(OBJECTS)
-	@printf "🔗 Linking $@\n    $(LD) $^ $(LDFLAGS) -o $@"
+	@printf "🔗 Linking $@\n"
+#	@printf "    $(LD) $^ $(LDFLAGS) -o $@"
 	@$(LD) $^ $(LDFLAGS) -o $@
 
 # 編譯 .cpp → .o
 $(BUILDDIR)/%.o: $(SRCDIR)/%.cpp
 	@mkdir -p $(dir $@)
-	@printf "🛠️  Compiling C++: $<\n    $(CXX) $(CXXFLAGS) -c $< -o $@\n"
+	@printf "🛠️  [C++]: $<\n"
+#	@printf "    $(CXX) $(CXXFLAGS) -c $< -o $@\n"
 	@$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # 編譯 .c → .o
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(dir $@)
-	@printf "🛠️  Compiling C  : $<\n    $(CC) $(CFLAGS) -c $< -o $@\n"
+	@printf "🛠️  [C]  : $<\n"
+#	@printf "    $(CC) $(CFLAGS) -c $< -o $@\n"
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 # 載入 .d 檔來追蹤 header 相依性

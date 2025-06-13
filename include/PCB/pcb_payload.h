@@ -7,29 +7,26 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <memory>
+#include <unordered_map>
+
+#include "PCB/common.h"
+#include "json.hpp"
 
 namespace pcb {
 
-class pin_t : public std::string {
-public:
-    using std::string::string;
-
-    const std::string &to_string() const
-    {
-        return *this;
-    }
-};
+using json = nlohmann::json;
 
 // pins_t should provide a total order over pins, to prevent dead lock
-class pins_t : public std::set<pin_t> {
+class pins_t : public std::set<std::string> {
 public:
-    using std::set<pin_t>::set;
+    using std::set<std::string>::set;
 
     std::string to_string() const
     {
         std::string str("{");
         bool        needComma = false;
-        for (const auto &pinStr : *this) {
+        for (const std::string &pinStr : *this) {
             if (needComma) {
                 str += ", ";
             }
@@ -40,56 +37,84 @@ public:
         return str;
     }
 };
+void to_json(json &j, const pins_t &p);
+void from_json(const json &j, pins_t &p);
 
-class pcb_interface_config {
-    virtual ~pcb_interface_config() = default;
+class pin_config_t : public std::unordered_map<std::string, pin_func_t> {
+public:
+    using std::unordered_map<std::string, pin_func_t>::unordered_map;
+
+    std::string to_string() const
+    {
+        std::string str("{ ");
+        bool        needComma = false;
+        for (const auto &[pin, pin_func] : *this) {
+            if (needComma) {
+                str += ", ";
+            }
+            needComma = true;
+            str += "{" + pin + ", " + pin_func.to_string() + "}";
+        }
+        str += " }";
+        return str;
+    }
+
+    pins_t to_pins() const
+    {
+        pins_t res;
+        for (const auto &[pin, pin_func] : *this) {
+            res.insert(pin);
+        }
+        return res;
+    }
+};
+void to_json(json &j, const pin_config_t &p);
+void from_json(const json &j, pin_config_t &p);
+
+class pcb_interface_config_if {
+public:
+    virtual ~pcb_interface_config_if() = 0;
+
+    pin_config_t pin_config;
 };
 
-class pcb_data {
-    virtual ~pcb_data() = default;
+class pcb_data_if {
+public:
+    virtual ~pcb_data_if() = 0;
 };
 
 class pcb_payload {
 public:
-    pcb_payload()
-        : m_read(false)
-        , m_begin_time(0)
-        , m_end_time(0)
-    {
-    }
+    pcb_payload()                                  = default;
     pcb_payload(const pcb_payload &rhs)            = delete;
     pcb_payload &operator=(const pcb_payload &rhs) = delete;
+    pcb_payload(const std::string &json_str);
 
     virtual ~pcb_payload() = default;
 
 public:
     /* API */
-    bool                                  is_read() const { return m_read; }
-    void                                  set_read() { m_read = true; }
-    bool                                  is_write() const { return !m_read; }
-    void                                  set_write() { m_read = false; }
-    pins_t                                get_pins() const { return m_pins; }
-    void                                  set_pins(const pins_t &pins) { m_pins = pins; }
-    sc_dt::uint64                         get_begin_time() const { return m_begin_time; }
-    void                                  set_begin_time(sc_dt::uint64 time) { m_begin_time = time; }
-    sc_dt::uint64                         get_end_time() const { return m_end_time; }
-    void                                  set_end_time(sc_dt::uint64 time) { m_end_time = time; }
-    std::string                           get_type() const { return m_type; }
-    void                                  set_type(std::string type) { m_type = type; }
-    std::shared_ptr<pcb_interface_config> get_interface_config() const { return m_interface_config; }
-    void                                  set_interface_config(std::shared_ptr<pcb_interface_config> pic) { m_interface_config = pic; }
-    std::shared_ptr<pcb_data>             get_data() const { return m_data; }
-    void                                  set_data(std::shared_ptr<pcb_data> data) { m_data = data; }
+    pins_t                   get_pins() const { return m_pins; }
+    void                     set_pins(const pins_t &pins) { m_pins = pins; }
+    sc_core::sc_time        *get_begin_time() const { return m_begin_time.get(); }
+    void                     set_begin_time(sc_core::sc_time time) { m_begin_time = std::make_unique<sc_core::sc_time>(time); }
+    sc_core::sc_time        *get_end_time() const { return m_end_time.get(); }
+    void                     set_end_time(sc_core::sc_time time) { m_end_time = std::make_unique<sc_core::sc_time>(time); }
+    std::string              get_type() const { return m_type; }
+    void                     set_type(std::string type) { m_type = type; }
+    pcb_interface_config_if *get_interface_config() const { return m_interface_config.get(); }
+    void                     set_interface_config(std::shared_ptr<pcb_interface_config_if> pic) { m_interface_config = pic; }
+    pcb_data_if             *get_data() const { return m_data.get(); }
+    void                     set_data(std::shared_ptr<pcb_data_if> data) { m_data = data; }
 
 private:
     /* attributes */
-    bool                                  m_read;
-    pins_t                                m_pins;
-    sc_dt::uint64                         m_begin_time;
-    sc_dt::uint64                         m_end_time;
-    std::string                           m_type;
-    std::shared_ptr<pcb_interface_config> m_interface_config;
-    std::shared_ptr<pcb_data>             m_data;
+    pins_t                                   m_pins;
+    std::unique_ptr<sc_core::sc_time>        m_begin_time;
+    std::unique_ptr<sc_core::sc_time>        m_end_time;
+    std::string                              m_type;
+    std::shared_ptr<pcb_interface_config_if> m_interface_config;
+    std::shared_ptr<pcb_data_if>             m_data;
 
 public:
     struct {
@@ -105,16 +130,4 @@ struct pcb_protocol_types {
 
 }
 
-inline std::ostream &operator<<(std::ostream &os, const pcb::pins_t &rhs)
-{
-    os << rhs.to_string();
-    return os;
-}
-
-template <>
-struct std::hash<pcb::pin_t> {
-    std::size_t operator()(const pcb::pin_t &s) const noexcept
-    {
-        return std::hash<std::string> {}(s);
-    }
-};
+std::ostream &operator<<(std::ostream &os, const pcb::pins_t &rhs);

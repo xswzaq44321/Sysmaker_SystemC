@@ -39,12 +39,13 @@ public:
     void bind_target(PCB_Target_IF &target, SOCK_TYPE &s)
     {
         const pcb::pins_t &pins = target.getPins();
-        for (const pcb::pin_t &p : pins) {
+        for (const std::string &p : pins) {
             // connect each target's pin to this pcb's trace
             if (!trace_value.count(p)) {
-                trace_value[p] = std::make_unique<trace_t>(p.to_string().c_str());
+                trace_value[p] = std::make_unique<trace_t>(p.c_str());
             }
-            (*target.pin_value[p])(*trace_value[p]);
+            PCB_Target_IF::pin_value_t &target_pin = (*target.pin_value[p]);
+            target_pin.bind(*trace_value[p]);
             Report_Info(SC_DEBUG, name(), "bind target pin %s to trace %s", target.pin_value[p]->name(), trace_value[p]->name());
         }
         target_id[pins] = n_inits;
@@ -86,5 +87,5 @@ protected:
     unsigned int                                             n_targs = 0;
     unsigned int                                             n_inits = 0;
     std::map<pcb::pins_t, int>                               target_id;
-    std::unordered_map<pcb::pin_t, std::unique_ptr<trace_t>> trace_value;
+    std::unordered_map<std::string, std::unique_ptr<trace_t>> trace_value;
 };
