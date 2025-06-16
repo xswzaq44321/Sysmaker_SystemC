@@ -18,6 +18,6 @@ public:
 
     std::unique_ptr<PCB_Initiator>    initiator;
     std::unique_ptr<PCB_Interconnect> virt_pcb;
-    std::unique_ptr<PCB_Target_IF>    targetA;
-    std::unique_ptr<PCB_Target_IF>    targetB;
+    std::unique_ptr<PCB_Target_IF>    uart_driver;
+    // std::unique_ptr<PCB_Target_IF>    targetB;
 };

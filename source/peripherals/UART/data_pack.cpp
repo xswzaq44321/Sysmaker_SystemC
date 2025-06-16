@@ -5,7 +5,7 @@
 #include "json.hpp"
 
 #include "PCB/pcb_payload.h"
-#include "peripherals/UART/data_pack.hpp"
+#include "peripherals/UART/data_pack.h"
 #include "PCB/data_config_factory.h"
 
 using json = nlohmann::json;
@@ -26,9 +26,9 @@ void from_json(const nlohmann::json &j, UART_interface_config &o)
 {
     o.pin_config = j.at("Pin Configuration").get<pcb::pin_config_t>();
     o.baud_rate  = j.at("Baud Rate").get<int>();
-    o.data_bits  = static_cast<UART_interface_config::Data_Bits>(j.at("Data Bits").get<int>());
-    o.parity_bit = static_cast<UART_interface_config::Parity_Bit>(j.at("Parity Bit").get<int>());
-    o.stop_bits  = static_cast<UART_interface_config::Stop_Bits>(j.at("Stop Bits").get<int>());
+    o.data_bits  = static_cast<UART::Data_Bits>(j.at("Data Bits").get<int>());
+    o.parity_bit = static_cast<UART::Parity_Bit>(j.at("Parity Bit").get<int>());
+    o.stop_bits  = static_cast<UART::Stop_Bits>(j.at("Stop Bits").get<int>());
 }
 void to_json(nlohmann::json &j, const UART_interface_config &o)
 {

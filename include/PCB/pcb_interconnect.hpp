@@ -26,12 +26,20 @@ public:
     {
         targ_socket.register_nb_transport_fw(this, &PCB_Interconnect::nb_fw);
         init_socket.register_nb_transport_bw(this, &PCB_Interconnect::nb_bw);
+
+        tf = sc_create_vcd_trace_file("wave");
     }
 
     virtual void end_of_elaboration()
     {
         n_targs = targ_socket.size();
         sc_assert(n_inits == init_socket.size());
+    }
+
+    void end_of_simulation()
+    {
+        cout << "write trace file\n";
+        sc_close_vcd_trace_file(tf);
     }
 
 public:
@@ -43,6 +51,8 @@ public:
             // connect each target's pin to this pcb's trace
             if (!trace_value.count(p)) {
                 trace_value[p] = std::make_unique<trace_t>(p.c_str());
+                trace_value[p]->write(sc_logic_1);
+                sc_trace(tf, *trace_value[p], p.c_str());
             }
             PCB_Target_IF::pin_value_t &target_pin = (*target.pin_value[p]);
             target_pin.bind(*trace_value[p]);
@@ -84,8 +94,11 @@ private:
 protected:
     using trace_t = sc_signal_resolved;
 
-    unsigned int                                             n_targs = 0;
-    unsigned int                                             n_inits = 0;
-    std::map<pcb::pins_t, int>                               target_id;
+    unsigned int                                              n_targs = 0;
+    unsigned int                                              n_inits = 0;
+    std::map<pcb::pins_t, int>                                target_id;
     std::unordered_map<std::string, std::unique_ptr<trace_t>> trace_value;
+
+private:
+    sc_trace_file *tf;
 };

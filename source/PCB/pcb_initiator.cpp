@@ -63,6 +63,9 @@ void PCB_Initiator::main_thread()
     wait(sc_time("1 us"));
     Report_Info(SC_DEBUG, name(), "[%s]: Send data packet: ", sc_core::sc_time_stamp().to_string().c_str()) << json_str;
     trans_to_slave(json_str);
+    // wait(sc_time("1 us"));
+    // Report_Info(SC_DEBUG, name(), "[%s]: Send data packet: ", sc_core::sc_time_stamp().to_string().c_str()) << json_str;
+    // trans_to_slave(json_str);
 
     // wait(sc_time("1 us"));
     // uint8_t     dataB = 0x22;

@@ -25,6 +25,7 @@ public:
         : name(s)
     {
     }
+    friend bool operator==(const pin_func_t &, const pin_func_t &);
 
     std::string to_string() const
     {
@@ -38,6 +39,10 @@ inline void from_json(const json &j, pin_func_t &p)
 inline void to_json(json &j, const pin_func_t &p)
 {
     j = json { p.to_string() };
+}
+inline bool operator==(const pin_func_t &lhs, const pin_func_t &rhs)
+{
+    return lhs.to_string() == rhs.to_string();
 }
 
 }

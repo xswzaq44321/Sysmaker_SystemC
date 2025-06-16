@@ -18,6 +18,7 @@ class PCB_Target_IF : protected sc_core::sc_module {
 public:
     using pin_value_t = sc_core::sc_inout_resolved;
     tlm_utils::passthrough_target_socket<PCB_Target_IF, 32, pcb::pcb_protocol_types> socket;
+    // each pin_value is declared as pointer, so as for derived class to be able to reference to them
     std::unordered_map<std::string, std::unique_ptr<pin_value_t>>                    pin_value;
 
     PCB_Target_IF(sc_core::sc_module_name name, const pcb::pin_config_t &pin_config)
@@ -44,7 +45,7 @@ public:
 
 protected:
     const pcb::pin_config_t                                                  pin_config;
-    pcb::pins_t                                                              pins;
+    const pcb::pins_t                                                        pins;
     tlm_utils::peq_with_cb_and_phase<PCB_Target_IF, pcb::pcb_protocol_types> peq;
     tlm_utils::peq_with_cb_and_phase<PCB_Target_IF, pcb::pcb_protocol_types> hw_access_done_peq;
 

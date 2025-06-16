@@ -3,7 +3,7 @@ BasedOnStyle: WebKit
 AlignConsecutiveDeclarations:
   Enabled: true
   AcrossEmptyLines: false
-  AcrossComments: false
+  AcrossComments: true
 AlignConsecutiveAssignments:
   Enabled: true
   AcrossEmptyLines: false

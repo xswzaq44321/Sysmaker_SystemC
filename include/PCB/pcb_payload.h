@@ -40,15 +40,68 @@ public:
 void to_json(json &j, const pins_t &p);
 void from_json(const json &j, pins_t &p);
 
-class pin_config_t : public std::unordered_map<std::string, pin_func_t> {
+class pin_config_t {
 public:
-    using std::unordered_map<std::string, pin_func_t>::unordered_map;
+    using map_type = std::unordered_map<std::string, pin_func_t>;
+    map_type m;
+
+    pin_config_t() = default;
+    pin_config_t(std::initializer_list<map_type::value_type> init)
+        : m(init)
+    {
+    }
+
+    template <typename... Ts>
+    auto insert(Ts &&...args) -> decltype(m.insert(std::forward<Ts>(args)...))
+    {
+        return m.insert(std::forward<Ts>(args)...);
+    }
+    template <typename... Ts>
+    auto find(Ts &&...args) -> decltype(m.find(std::forward<Ts>(args)...))
+    {
+        return m.find(std::forward<Ts>(args)...);
+    }
+    template <typename... Ts>
+    auto count(Ts &&...args) -> decltype(m.count(std::forward<Ts>(args)...))
+    {
+        return m.count(std::forward<Ts>(args)...);
+    }
+    template <typename... Ts>
+    auto begin(Ts &&...args) -> decltype(m.begin(std::forward<Ts>(args)...))
+    {
+        return m.begin(std::forward<Ts>(args)...);
+    }
+    template <typename... Ts>
+    auto begin(Ts &&...args) const -> decltype(m.begin(std::forward<Ts>(args)...))
+    {
+        return m.begin(std::forward<Ts>(args)...);
+    }
+    template <typename... Ts>
+    auto cbegin(Ts &&...args) const -> decltype(m.cbegin(std::forward<Ts>(args)...))
+    {
+        return m.cbegin(std::forward<Ts>(args)...);
+    }
+    template <typename... Ts>
+    auto end(Ts &&...args) -> decltype(m.end(std::forward<Ts>(args)...))
+    {
+        return m.end(std::forward<Ts>(args)...);
+    }
+    template <typename... Ts>
+    auto end(Ts &&...args) const -> decltype(m.end(std::forward<Ts>(args)...))
+    {
+        return m.end(std::forward<Ts>(args)...);
+    }
+    template <typename... Ts>
+    auto cend(Ts &&...args) const -> decltype(m.cend(std::forward<Ts>(args)...))
+    {
+        return m.cend(std::forward<Ts>(args)...);
+    }
 
     std::string to_string() const
     {
         std::string str("{ ");
         bool        needComma = false;
-        for (const auto &[pin, pin_func] : *this) {
+        for (const auto &[pin, pin_func] : m) {
             if (needComma) {
                 str += ", ";
             }
@@ -59,10 +112,19 @@ public:
         return str;
     }
 
+    std::string func_to_pin(const pin_func_t &target) const
+    {
+        for (const auto &[pin, pin_func] : m) {
+            if (pin_func == target)
+                return pin;
+        }
+        return "NOT_FOUND";
+    }
+
     pins_t to_pins() const
     {
         pins_t res;
-        for (const auto &[pin, pin_func] : *this) {
+        for (const auto &[pin, pin_func] : m) {
             res.insert(pin);
         }
         return res;
