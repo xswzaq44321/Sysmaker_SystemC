@@ -7,45 +7,85 @@ using json = nlohmann::json;
 
 void UART_Driver::hw_access(pcb::pcb_payload &trans, const tlm::tlm_phase &phase)
 {
-    peq.notify(trans);
-    // Report_Info(SC_DEBUG, name(), "[%s]: Received transation data: \nIC: %s\nData: %s", sc_core::sc_time_stamp().to_string().c_str(), json(*IC).dump().c_str(), json(*data).dump().c_str());
+    uart_peq.notify(trans);
+    // Report_Info(SC_DEBUG, name(), "Received transation data: \nIC: %s\nData: %s", json(*IC).dump().c_str(), json(*data).dump().c_str());
 }
 
 static inline bool is_high(const sc_dt::sc_logic &v)
 {
-    return v == SC_LOGIC_1 || v == SC_LOGIC_Z;
+    return v == sc_logic_1;
 }
 
 void UART_Driver::run()
 {
+    rxd->write(sc_dt::sc_logic_Z);
+    txd->write(sc_dt::sc_logic_1);
+    trace_clk.write(sc_logic_1);
+    wait(SC_ZERO_TIME);
+
+    Report_Info(SC_DEBUG, name(), "pin initialized");
+
     while (true) {
         wait();
-        pcb::pcb_payload *trans = peq.get_next_transaction();
+        pcb::pcb_payload *trans = uart_peq.get_next_transaction();
         auto             *ic    = dynamic_cast<UART_interface_config *>(trans->get_interface_config());
         auto             *data  = dynamic_cast<UART_data *>(trans->get_data());
-        Report_Info(SC_DEBUG, name(), "[%s]: Received transation data: \nInterface Config: %s\nData: %s", sc_core::sc_time_stamp().to_string().c_str(), json(*ic).dump().c_str(), json(*data).dump().c_str());
+        Report_Info(SC_DEBUG, name(), "Received transation data: \nInterface Config: %s\nData: %s", json(*ic).dump().c_str(), json(*data).dump().c_str());
+
+        // checking interface configuration
+        std::string tx_pin = pin_config.func_to_pin("TX");
+        std::string rx_pin = pin_config.func_to_pin("RX");
+        if (ic->pin_config[tx_pin] != "TX" || ic->pin_config[rx_pin] != "RX") {
+            SC_REPORT_WARNING(name(), "TX and RX pin misconfigured!");
+            hw_access_done_peq.notify(*trans, tlm::tlm_phase_enum::BEGIN_RESP);
+            continue;
+        }
 
         int     baud_rate = ic->baud_rate;
         int     data_bits = ic->data_bits;
         int     stop_bits = ic->stop_bits;
         sc_time baud_period(1.0 / baud_rate, SC_SEC);
         for (uint8_t datum : data->tx) {
+            sc_time next_sample = sc_time_stamp() + baud_period;
             // start bit, always low
             txd->write(sc_logic_0);
+            trace_clk.write(sc_logic_0);
             // Report_Info(SC_DEBUG, name(), "[%s]: UART start-bit write %c", sc_time_stamp().to_string().c_str(), '0');
-            wait(baud_period);
+            wait(next_sample - sc_time_stamp());
 
             // Data bit
-            for (int i = 0; i < data_bits; ++i) {
+            for (int i = 0; i < std::max<int>(data_bits, 8); ++i) {
                 txd->write(((datum >> i) & 1) ? sc_logic_1 : sc_logic_0);
+                trace_clk.write(trace_clk.read() == sc_logic_Z ? sc_logic_X : sc_logic_Z);
                 // Report_Info(SC_DEBUG, name(), "[%s]: UART write %c", sc_time_stamp().to_string().c_str(), ((datum >> i) & 1) ? '1' : '0');
-                wait(baud_period);
+                next_sample += baud_period;
+                wait(next_sample - sc_time_stamp());
+            }
+
+            /* parity bit */
+            if (ic->parity_bit != UART::PARITYBIT_0) {
+                sc_logic p;
+                int      bit_cnt = __builtin_popcount(datum);
+                if (ic->parity_bit == UART::PARITYBIT_1) {
+                    p = (bit_cnt % 2) ? sc_logic_0 : sc_logic_1;
+                } else if (ic->parity_bit == UART::PARITYBIT_2) {
+                    p = (bit_cnt % 2) ? sc_logic_1 : sc_logic_0;
+                }
+                txd->write(p);
+                next_sample += baud_period;
+                wait(next_sample - sc_time_stamp());
+            } else if (data_bits == 9) {
+                // mark/space parity
+                next_sample += baud_period;
+                wait(next_sample - sc_time_stamp());
             }
 
             // stop bit
             txd->write(sc_logic_1);
+            trace_clk.write(sc_logic_1);
             // Report_Info(SC_DEBUG, name(), "[%s]: UART stop-bit write %c", sc_time_stamp().to_string().c_str(), '1');
-            wait(baud_period * stop_bits);
+            next_sample += stop_bits * baud_period;
+            wait(next_sample - sc_time_stamp());
         }
 
         hw_access_done_peq.notify(*trans, tlm::tlm_phase_enum::BEGIN_RESP);

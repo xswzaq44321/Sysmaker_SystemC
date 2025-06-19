@@ -13,6 +13,8 @@
 #include "PCB/pcb_payload.h"
 #include "PCB/pcb_target.hpp"
 
+extern sc_core::sc_trace_file *tf;
+
 class PCB_Interconnect : sc_core::sc_module {
 private:
     tlm_utils::multi_passthrough_initiator_socket<PCB_Interconnect, 32, pcb::pcb_protocol_types> init_socket;
@@ -20,26 +22,18 @@ private:
 public:
     tlm_utils::multi_passthrough_target_socket<PCB_Interconnect, 32, pcb::pcb_protocol_types> targ_socket;
 
-    SC_CTOR(PCB_Interconnect)
+    PCB_Interconnect(::sc_core::sc_module_name)
         : init_socket("init_socket")
         , targ_socket("targ_socket")
     {
         targ_socket.register_nb_transport_fw(this, &PCB_Interconnect::nb_fw);
         init_socket.register_nb_transport_bw(this, &PCB_Interconnect::nb_bw);
-
-        tf = sc_create_vcd_trace_file("wave");
     }
 
     virtual void end_of_elaboration()
     {
         n_targs = targ_socket.size();
         sc_assert(n_inits == init_socket.size());
-    }
-
-    void end_of_simulation()
-    {
-        cout << "write trace file\n";
-        sc_close_vcd_trace_file(tf);
     }
 
 public:
@@ -51,11 +45,10 @@ public:
             // connect each target's pin to this pcb's trace
             if (!trace_value.count(p)) {
                 trace_value[p] = std::make_unique<trace_t>(p.c_str());
-                trace_value[p]->write(sc_logic_1);
-                sc_trace(tf, *trace_value[p], p.c_str());
+                sc_trace(tf, *trace_value[p], trace_value[p]->name());
             }
-            PCB_Target_IF::pin_value_t &target_pin = (*target.pin_value[p]);
-            target_pin.bind(*trace_value[p]);
+            PCB_Target_IF::pin_value_t *target_pin = target.pin_value[p].get();
+            target_pin->bind(*trace_value[p]);
             Report_Info(SC_DEBUG, name(), "bind target pin %s to trace %s", target.pin_value[p]->name(), trace_value[p]->name());
         }
         target_id[pins] = n_inits;
@@ -86,9 +79,15 @@ private:
 
     int decode_pins(const pcb::pins_t &pins)
     {
-        if (!target_id.count(pins))
-            return -1;
-        return target_id[pins];
+        for (const auto &[k, v] : target_id) {
+            if (k.intersect(pins)) {
+                return v;
+            }
+        }
+        return -1;
+        // if (!target_id.count(pins))
+        //     return -1;
+        // return target_id[pins];
     }
 
 protected:
@@ -98,7 +97,4 @@ protected:
     unsigned int                                              n_inits = 0;
     std::map<pcb::pins_t, int>                                target_id;
     std::unordered_map<std::string, std::unique_ptr<trace_t>> trace_value;
-
-private:
-    sc_trace_file *tf;
 };

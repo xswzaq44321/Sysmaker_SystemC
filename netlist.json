@@ -1,0 +1,95 @@
+{
+    "HW_UART_U1": {
+        "components": [
+            {
+                "type": "UART",
+                "Interface Configuration": {
+                    "Pin Configuration": {
+                        "1": "RX",
+                        "2": "TX"
+                    },
+                    "Baud Rate": 9600,
+                    "Data Bits": 8,
+                    "Parity Bit": 0,
+                    "Stop Bits": 1
+                }
+            }
+        ],
+        "pin_to_trace": {
+            "1": "PA10",
+            "2": "PA9"
+        }
+    },
+    "MPU-9250_U1": {
+        "components": [
+            {
+                "type": "SPI",
+                "Interface Configuration": {
+                    "Pin Configuration": {
+                        "23": "SCLK",
+                        "9": "MISO",
+                        "24": "MOSI",
+                        "22": "CS"
+                    }
+                }
+            }
+        ],
+        "pin_to_trace": {
+            "23": "PE2",
+            "9": "PE5",
+            "24": "PE6",
+            "22": "PG13"
+        }
+    },
+    "MPU-9250_U2": {
+        "components": [
+            {
+                "type": "SPI",
+                "Interface Configuration": {
+                    "Pin Configuration": {
+                        "23": "SCLK",
+                        "9": "MISO",
+                        "24": "MOSI",
+                        "22": "CS"
+                    }
+                }
+            }
+        ],
+        "pin_to_trace": {
+            "23": "PE2",
+            "9": "PE5",
+            "24": "PE6",
+            "22": "PG14"
+        }
+    },
+    "LED1": {
+        "components": [
+            {
+                "type": "GPIO",
+                "Interface Configuration": {
+                    "Pin Configuration": {
+                        "1": null
+                    }
+                }
+            }
+        ],
+        "pin_to_trace": {
+            "1": "PG13"
+        }
+    },
+    "LED2": {
+        "components": [
+            {
+                "type": "GPIO",
+                "Interface Configuration": {
+                    "Pin Configuration": {
+                        "1": null
+                    }
+                }
+            }
+        ],
+        "pin_to_trace": {
+            "1": "PG14"
+        }
+    }
+}

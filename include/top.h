@@ -6,18 +6,24 @@
 #include "PCB/pcb_interconnect.hpp"
 #include "PCB/pcb_target.hpp"
 
-using namespace sc_core;
+extern sc_core::sc_trace_file *tf;
 
-class top : public sc_module {
+class top : public sc_core::sc_module {
 public:
-    top(sc_module_name name);
+    top(sc_core::sc_module_name name, std::string trace_file = "wave");
     ~top() = default;
 
-    sc_clock clk; // declares a clock
+    sc_core::sc_clock clk; // declares a clock
     // bridge bridge_obj;
 
-    std::unique_ptr<PCB_Initiator>    initiator;
-    std::unique_ptr<PCB_Interconnect> virt_pcb;
-    std::unique_ptr<PCB_Target_IF>    uart_driver;
-    // std::unique_ptr<PCB_Target_IF>    targetB;
+    std::unique_ptr<PCB_Initiator>              initiator;
+    std::unique_ptr<PCB_Interconnect>           virt_pcb;
+    std::vector<std::unique_ptr<PCB_Target_IF>> targets;
+
+    void read_net_list(std::string file = "netlist.json");
+
+    void end_of_simulation()
+    {
+        sc_close_vcd_trace_file(tf);
+    }
 };

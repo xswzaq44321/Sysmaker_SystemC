@@ -4,6 +4,9 @@
 #include <systemc>
 
 #include "peripherals/UART/data_pack.h"
+#include "report.h"
+
+#include <memory>
 
 class UART_Hardware : public sc_core::sc_module {
     UART_interface_config ic;
@@ -19,8 +22,10 @@ public:
     {
     }
 
-    sc_core::sc_inout_resolved rxd;
-    sc_core::sc_inout_resolved txd;
+    sc_core::sc_in_resolved  rxd;
+    sc_core::sc_out_resolved txd;
+
+    sc_core::sc_signal_resolved trace_clk;
 
 private:
     void run();

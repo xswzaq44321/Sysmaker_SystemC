@@ -36,6 +36,20 @@ public:
         str += "}";
         return str;
     }
+
+    bool intersect(const pins_t& rhs) const {
+        auto it = this->cbegin();
+        auto jt = rhs.cbegin();
+        while(it != this->cend() && jt != rhs.cend()){
+            if(*it < *jt)
+                ++it;
+            else if(*it > *jt)
+                ++jt;
+            else
+                return true;
+        }
+        return false;
+    }
 };
 void to_json(json &j, const pins_t &p);
 void from_json(const json &j, pins_t &p);
@@ -60,6 +74,11 @@ public:
     auto find(Ts &&...args) -> decltype(m.find(std::forward<Ts>(args)...))
     {
         return m.find(std::forward<Ts>(args)...);
+    }
+    template <typename... Ts>
+    auto operator[](Ts &&...args) -> decltype(m.operator[](std::forward<Ts>(args)...))
+    {
+        return m.operator[](std::forward<Ts>(args)...);
     }
     template <typename... Ts>
     auto count(Ts &&...args) -> decltype(m.count(std::forward<Ts>(args)...))

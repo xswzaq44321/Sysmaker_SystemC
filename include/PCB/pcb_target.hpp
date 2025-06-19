@@ -25,12 +25,11 @@ public:
         : sc_module(name)
         , socket("socket")
         , pin_config(pin_config)
-        , pins(pin_config.to_pins())
         , peq(this, &PCB_Target_IF::peq_cb)
         , hw_access_done_peq(this, &PCB_Target_IF::done_peq_cb)
     {
         socket.register_nb_transport_fw(this, &PCB_Target_IF::nb_fw);
-        for (const std::string &p : pins) {
+        for (const std::string &p : pin_config.to_pins()) {
             pin_value[p] = std::make_unique<pin_value_t>(p.c_str());
         }
     }
@@ -38,14 +37,13 @@ public:
     virtual ~PCB_Target_IF() = default;
 
 public:
-    const pcb::pins_t &getPins() const
+    pcb::pins_t getPins() const
     {
-        return pins;
+        return pin_config.to_pins();
     }
 
 protected:
     const pcb::pin_config_t                                                  pin_config;
-    const pcb::pins_t                                                        pins;
     tlm_utils::peq_with_cb_and_phase<PCB_Target_IF, pcb::pcb_protocol_types> peq;
     tlm_utils::peq_with_cb_and_phase<PCB_Target_IF, pcb::pcb_protocol_types> hw_access_done_peq;
 
@@ -59,25 +57,34 @@ private:
                              tlm::tlm_phase   &phase,
                              sc_core::sc_time &delay)
     {
-        Report_Info(sc_core::SC_DEBUG, name(), "[%s]: ", sc_core::sc_time_stamp().to_string().c_str()) << phase;
+        Report_Info(sc_core::SC_DEBUG, name()) << phase;
         if (phase == tlm::BEGIN_REQ) {
             // 把事務丟進佇列 (queue)，稍後處理
-            Report_Info(sc_core::SC_DEBUG, name(), "[%s]: putting trans into peq with delay: %s", sc_core::sc_time_stamp().to_string().c_str(), delay.to_string().c_str());
+            Report_Info(sc_core::SC_DEBUG, name(), "putting trans into peq with delay: %s", delay.to_string().c_str());
             peq.notify(trans, phase, delay);
             phase = tlm::END_REQ; // 馬上回 END_REQ 允許 pipeline
             delay = sc_core::SC_ZERO_TIME; // 此回覆本身無額外延遲
             return tlm::TLM_UPDATED;
+        } else if (phase == tlm::END_RESP) {
+            Report_Info(sc_core::SC_DEBUG, name(), "putting trans into peq with delay: %s", delay.to_string().c_str());
+            peq.notify(trans, phase, delay);
+            return tlm::TLM_ACCEPTED;
         }
         return tlm::TLM_ACCEPTED; // 其他 phase 不處理
     }
 
     void peq_cb(pcb::pcb_payload &trans, const tlm::tlm_phase &phase)
     {
-        hw_access(trans, phase);
+        if (phase == tlm::BEGIN_REQ) {
+            hw_access(trans, phase);
+        } else if (phase == tlm::END_RESP) {
+            Report_Info(sc_core::SC_MEDIUM, name(), "ending simulation");
+            sc_core::sc_stop();
+        }
     }
     void done_peq_cb(pcb::pcb_payload &trans, const tlm::tlm_phase &phase)
     {
-        Report_Info(sc_core::SC_DEBUG, name(), "[%s]: hw_access finished.", sc_core::sc_time_stamp().to_string().c_str());
+        Report_Info(sc_core::SC_DEBUG, name(), "hw_access finished.");
 
         // 回應 BEGIN_RESP
         tlm::tlm_phase     bw_phase = tlm::BEGIN_RESP;
