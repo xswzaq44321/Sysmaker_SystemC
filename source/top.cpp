@@ -6,30 +6,21 @@
 #include "json.hpp"
 
 using namespace std;
+using namespace sc_core;
 using json = nlohmann::json;
 
 sc_core::sc_trace_file *tf;
 
-top::top(sc_module_name name, std::string trace_file)
+top::top(sc_module_name name, std::string unix_socket_path, std::string trace_file)
     : sc_module(name)
-    , clk("clk_4", 250.0, SC_NS, 125.0, 0, SC_MS, true)
-// , bridge_obj("qemu_bridge", true, "/tmp/fake_qemu.sock")
 {
     tf = sc_create_vcd_trace_file(trace_file.c_str());
+    tf->write_comment("comment");
 
-    // bridge_obj.clk(clk);
-
-    initiator = std::make_unique<PCB_Initiator>("initiator");
+    initiator = std::make_unique<PCB_Initiator>("initiator", unix_socket_path);
     virt_pcb  = std::make_unique<PCB_Interconnect>("virt_pcb");
 
     read_net_list();
-    // auto uart_hw = std::make_unique<UART_Hardware>(
-    //     "UART HW simulation module",
-    //     UART_interface_config(9600, UART::DATABITS_8, UART::PARITYBIT_0, UART::STOPBITS_1));
-    // targets = std::make_unique<UART_Driver>(
-    //     "UART Driver",
-    //     pcb::pin_config_t { { "PA9", "TX" }, { "PA10", "RX" } },
-    //     std::move(uart_hw));
 
     initiator->socket.bind(virt_pcb->targ_socket);
     for (const auto &target : targets) {

@@ -49,7 +49,7 @@ public:
             }
             PCB_Target_IF::pin_value_t *target_pin = target.pin_value[p].get();
             target_pin->bind(*trace_value[p]);
-            Report_Info(SC_DEBUG, name(), "bind target pin %s to trace %s", target.pin_value[p]->name(), trace_value[p]->name());
+            Report_Info(sc_core::SC_DEBUG, name(), "bind target pin %s to trace %s", target.pin_value[p]->name(), trace_value[p]->name());
         }
         target_id[pins] = n_inits;
         n_inits++;
@@ -91,7 +91,7 @@ private:
     }
 
 protected:
-    using trace_t = sc_signal_resolved;
+    using trace_t = sc_core::sc_signal_resolved;
 
     unsigned int                                              n_targs = 0;
     unsigned int                                              n_inits = 0;

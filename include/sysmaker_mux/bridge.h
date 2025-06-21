@@ -1,17 +1,20 @@
-#include <systemc.h>
+#include <systemc>
 
 #include <csignal>
+#include <string>
 
 #include "socket_api.h"
 
-class bridge : public sc_module {
+class bridge : public sc_core::sc_module {
 public:
-    bridge(sc_module_name name, bool isUnix, const char *pathOrIp, int port = 0);
+    bridge(sc_core::sc_module_name name, bool isUnix, std::string pathOrIp, int port = 0);
     ~bridge();
 
-    void      run();
+    void run();
 
-    sc_in_clk clk;
+    sc_core::sc_in_clk            clk;
+    sc_core::sc_fifo<std::string> in_reqs;
+    sc_core::sc_fifo<std::string> out_reqs;
 
 protected:
     struct client client_obj;

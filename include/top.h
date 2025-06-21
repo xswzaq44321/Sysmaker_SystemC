@@ -1,7 +1,5 @@
 #include <systemc>
 
-#include "sysmaker_mux/bridge.h"
-
 #include "PCB/pcb_initiator.hpp"
 #include "PCB/pcb_interconnect.hpp"
 #include "PCB/pcb_target.hpp"
@@ -10,11 +8,8 @@ extern sc_core::sc_trace_file *tf;
 
 class top : public sc_core::sc_module {
 public:
-    top(sc_core::sc_module_name name, std::string trace_file = "wave");
+    top(sc_core::sc_module_name name, std::string unix_socket_path, std::string trace_file = "wave");
     ~top() = default;
-
-    sc_core::sc_clock clk; // declares a clock
-    // bridge bridge_obj;
 
     std::unique_ptr<PCB_Initiator>              initiator;
     std::unique_ptr<PCB_Interconnect>           virt_pcb;

@@ -5,6 +5,38 @@ using namespace sc_core;
 using namespace sc_dt;
 using json = nlohmann::json;
 
+UART_Driver::UART_Driver(sc_module_name name, const pcb::pin_config_t &pin_config, const UART_interface_config &ic)
+    : PCB_Target_IF(name, pin_config)
+    , uart_peq("uart_peq")
+{
+    std::string tx_pin = pin_config.func_to_pin("TX");
+    std::string rx_pin = pin_config.func_to_pin("RX");
+    if (!pin_value.count(tx_pin)) {
+        SC_REPORT_ERROR("UART_Driver", "pin_value for TX not found!");
+    }
+    if (!pin_value.count(rx_pin)) {
+        SC_REPORT_ERROR("UART_Driver", "pin_value for RX not found!");
+    }
+    txd = pin_value[tx_pin].get();
+    rxd = pin_value[rx_pin].get();
+    Report_Info(SC_DEBUG, this->name(), "bind trace %s to my tx", tx_pin.c_str());
+    Report_Info(SC_DEBUG, this->name(), "bind trace %s to my rx", rx_pin.c_str());
+
+    hardware = std::make_unique<UART_Hardware>("hardware", ic);
+    hardware->rxd.bind(*txd);
+    hardware->txd.bind(*rxd);
+    Report_Info(SC_DEBUG, this->name(), "bind trace %s to hardware rx", tx_pin.c_str());
+    Report_Info(SC_DEBUG, this->name(), "bind trace %s to hardware tx", rx_pin.c_str());
+
+    SC_THREAD(run);
+    // sensitive << uart_peq.get_event();
+
+    sc_trace(tf, *rxd, std::string(this->name()) + ".RX");
+    sc_trace(tf, *txd, std::string(this->name()) + ".TX");
+    sc_trace(tf, trace_clk, std::string(this->name()) + ".trace_clk");
+    sc_trace(tf, hardware->trace_clk, std::string(this->name()) + ".hw_trace_clk");
+}
+
 void UART_Driver::hw_access(pcb::pcb_payload &trans, const tlm::tlm_phase &phase)
 {
     uart_peq.notify(trans);
@@ -26,7 +58,7 @@ void UART_Driver::run()
     Report_Info(SC_DEBUG, name(), "pin initialized");
 
     while (true) {
-        wait();
+        wait(uart_peq.get_event());
         pcb::pcb_payload *trans = uart_peq.get_next_transaction();
         auto             *ic    = dynamic_cast<UART_interface_config *>(trans->get_interface_config());
         auto             *data  = dynamic_cast<UART_data *>(trans->get_data());

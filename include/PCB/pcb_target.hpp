@@ -78,6 +78,7 @@ private:
         if (phase == tlm::BEGIN_REQ) {
             hw_access(trans, phase);
         } else if (phase == tlm::END_RESP) {
+            /* TODO: remove this */
             Report_Info(sc_core::SC_MEDIUM, name(), "ending simulation");
             sc_core::sc_stop();
         }

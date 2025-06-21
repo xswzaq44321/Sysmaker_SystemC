@@ -29,6 +29,12 @@ struct server
     int _server_fd;
 };
 
+/**
+ * @brief free struct server obj
+ * @param obj pointer to struct server
+ */
+void free_server_obj(struct server* obj);
+
 /// @brief create socket on server side
 /// @param obj you need to fill in members starting with `m_` in struct server in advance
 void server_create_socket(struct server *obj);
@@ -54,6 +60,12 @@ struct client
     int m_port;
     int server_fd;
 };
+
+/**
+ * @brief free struct client obj
+ * @param obj pointer to struct client
+ */
+void free_client_obj(struct client* obj);
 
 /// @brief create socket on client side
 /// @param obj you need to fill in members starting with `m_` in struct server in advance

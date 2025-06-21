@@ -67,7 +67,6 @@ static std::unique_ptr<pcb::pcb_data_if> uart_data_factory(const nlohmann::json 
 
     return obj;
 }
-
 static std::unique_ptr<pcb::pcb_interface_config_if> uart_interface_config_factory(const nlohmann::json &raw_data)
 {
     auto obj = std::make_unique<UART_interface_config>(raw_data.get<UART_interface_config>());
@@ -75,5 +74,21 @@ static std::unique_ptr<pcb::pcb_interface_config_if> uart_interface_config_facto
 
     return obj;
 }
+static nlohmann::json uart_data_to_json(const pcb::pcb_data_if *obj)
+{
+    const UART_data *o = dynamic_cast<const UART_data *>(obj);
+    if (!o) {
+        throw std::invalid_argument("Fatal error: `obj` type is not UART_data type!");
+    }
+    return json(*o);
+}
+static nlohmann::json uart_interface_config_to_json(const pcb::pcb_interface_config_if *obj)
+{
+    const UART_interface_config *o = dynamic_cast<const UART_interface_config *>(obj);
+    if (!o) {
+        throw std::invalid_argument("Fatal error: `obj` type is not UART_interface_config type!");
+    }
+    return json(*o);
+}
 
-register_type_factory(UART, uart_data_factory, uart_interface_config_factory);
+register_type_factory(UART, uart_data_factory, uart_interface_config_factory, uart_data_to_json, uart_interface_config_to_json);

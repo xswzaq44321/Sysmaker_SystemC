@@ -48,6 +48,17 @@ void from_json(const json &j, pin_config_t &p)
 pcb_interface_config_if::~pcb_interface_config_if() { }
 pcb_data_if::~pcb_data_if() { }
 
+void to_json(json &j, const pcb_payload &p)
+{
+    j["pins"] = json(p.m_pins);
+    if (p.m_begin_time)
+        j["beginTime"] = json(p.m_begin_time->to_string());
+    if (p.m_end_time)
+        j["endTime"] = json(p.m_end_time->to_string());
+    j["type"]                    = p.m_type;
+    j["Interface Configuration"] = Data_Config_Factory::interface_config_to_json(p.m_type, p.m_interface_config.get());
+    j["Data"]                    = Data_Config_Factory::data_to_json(p.m_type, p.m_data.get());
+}
 /*
 {
     "pins": [
@@ -61,19 +72,19 @@ pcb_data_if::~pcb_data_if() { }
     "Data": {...}
 }
 */
-pcb_payload::pcb_payload(const std::string &json_str)
+void from_json(const json &j, pcb_payload &p)
 {
-    json j = json::parse(json_str);
-    m_pins = j.at("pins").get<pins_t>();
+    std::cout << j.dump(4) << std::endl;
+    p.m_pins = j.at("pins").get<pins_t>();
     if (j.count("beginTime")) {
-        m_begin_time = std::make_unique<sc_time>(j.at("beginTime").get<std::string>());
+        p.m_begin_time = std::make_unique<sc_time>(j.at("beginTime").get<std::string>());
     }
     if (j.count("endTime")) {
-        m_end_time = std::make_unique<sc_time>(j.at("endTime").get<std::string>());
+        p.m_end_time = std::make_unique<sc_time>(j.at("endTime").get<std::string>());
     }
-    std::string type   = j.at("type");
-    m_interface_config = Data_Config_Factory::produce_interface_config(type, j.at("Interface Configuration"));
-    m_data             = Data_Config_Factory::produce_data(type, j.at("Data"));
+    p.m_type             = j.at("type");
+    p.m_interface_config = Data_Config_Factory::produce_interface_config(p.m_type, j.at("Interface Configuration"));
+    p.m_data             = Data_Config_Factory::produce_data(p.m_type, j.at("Data"));
 }
 
 }

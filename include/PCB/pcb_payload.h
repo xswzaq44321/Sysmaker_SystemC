@@ -37,13 +37,14 @@ public:
         return str;
     }
 
-    bool intersect(const pins_t& rhs) const {
+    bool intersect(const pins_t &rhs) const
+    {
         auto it = this->cbegin();
         auto jt = rhs.cbegin();
-        while(it != this->cend() && jt != rhs.cend()){
-            if(*it < *jt)
+        while (it != this->cend() && jt != rhs.cend()) {
+            if (*it < *jt)
                 ++it;
-            else if(*it > *jt)
+            else if (*it > *jt)
                 ++jt;
             else
                 return true;
@@ -167,9 +168,9 @@ public:
 class pcb_payload {
 public:
     pcb_payload()                                  = default;
+    pcb_payload(pcb_payload &&rhs)                 = default;
     pcb_payload(const pcb_payload &rhs)            = delete;
     pcb_payload &operator=(const pcb_payload &rhs) = delete;
-    pcb_payload(const std::string &json_str);
 
     virtual ~pcb_payload() = default;
 
@@ -197,12 +198,17 @@ private:
     std::shared_ptr<pcb_interface_config_if> m_interface_config;
     std::shared_ptr<pcb_data_if>             m_data;
 
+    friend void to_json(json &j, const pcb_payload &p);
+    friend void from_json(const json &j, pcb_payload &p);
+
 public:
     struct {
         int init;
         int targ;
     } tlm_route;
 };
+void to_json(json &j, const pcb_payload &p);
+void from_json(const json &j, pcb_payload &p);
 
 struct pcb_protocol_types {
     typedef pcb_payload    tlm_payload_type;
