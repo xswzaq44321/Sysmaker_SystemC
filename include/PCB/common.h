@@ -50,4 +50,45 @@ inline bool operator!=(const pin_func_t &lhs, const pin_func_t &rhs)
     return !(lhs == rhs);
 }
 
+/**
+ * @brief   set of pins, provides a container for pins used by some hardware
+ *          pins_t should provide a total order over pins, to prevent dead lock
+ */
+class pins_t : public std::set<std::string> {
+public:
+    using std::set<std::string>::set;
+
+    std::string to_string() const
+    {
+        std::string str("{");
+        bool        needComma = false;
+        for (const std::string &pinStr : *this) {
+            if (needComma) {
+                str += ", ";
+            }
+            str += pinStr;
+            needComma = true;
+        }
+        str += "}";
+        return str;
+    }
+
+    bool intersect(const pins_t &rhs) const
+    {
+        auto it = this->cbegin();
+        auto jt = rhs.cbegin();
+        while (it != this->cend() && jt != rhs.cend()) {
+            if (*it < *jt)
+                ++it;
+            else if (*it > *jt)
+                ++jt;
+            else
+                return true;
+        }
+        return false;
+    }
+};
+void to_json(json &j, const pins_t &p);
+void from_json(const json &j, pins_t &p);
+
 }

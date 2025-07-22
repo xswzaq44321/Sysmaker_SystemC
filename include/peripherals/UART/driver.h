@@ -14,14 +14,14 @@ extern sc_core::sc_trace_file *tf;
 
 class UART_Driver : public PCB_Target_IF {
 public:
-    UART_Driver(sc_core::sc_module_name name, const pcb::pin_config_t &pin_config, const UART_interface_config &ic);
+    UART_Driver(sc_core::sc_module_name name, const pcb::pin_config_t &pin_config, const pcb::pcb_interface_config &ic);
     virtual ~UART_Driver() = default;
 
 public:
     sc_core::sc_inout_resolved *rxd;
     sc_core::sc_inout_resolved *txd;
 
-    sc_core::sc_signal_resolved trace_clk;
+    sc_core::sc_signal_resolved debug_trace_clk;
 
     virtual void hw_access(pcb::pcb_payload &trans, const tlm::tlm_phase &phase);
 

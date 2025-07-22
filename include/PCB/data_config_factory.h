@@ -12,10 +12,10 @@
 
 class Data_Config_Factory {
 public:
-    using data_fact_t      = std::function<std::unique_ptr<pcb::pcb_data_if>(const nlohmann::json &)>;
-    using inte_conf_fact_t = std::function<std::unique_ptr<pcb::pcb_interface_config_if>(const nlohmann::json &)>;
-    using data_json_t      = std::function<nlohmann::json(const pcb::pcb_data_if *)>;
-    using inte_conf_json_t = std::function<nlohmann::json(const pcb::pcb_interface_config_if *)>;
+    using data_fact_t      = std::function<std::unique_ptr<pcb::pcb_data>(const nlohmann::json &)>;
+    using inte_conf_fact_t = std::function<std::unique_ptr<pcb::pcb_interface_config>(const nlohmann::json &)>;
+    using data_json_t      = std::function<nlohmann::json(const pcb::pcb_data *)>;
+    using inte_conf_json_t = std::function<nlohmann::json(const pcb::pcb_interface_config *)>;
 
     /**
      * @brief Registers data pack's type and it's factory functions
@@ -31,30 +31,30 @@ public:
      * @brief Factory function for generating data pack's data section
      * @param type data pack's type
      * @param json_obj nlohmann::json representing data section
-     * @return pointer to data section's base type (pcb::pcb_data_if*)
+     * @return pointer to data section's base type (pcb::pcb_data*)
      */
-    static std::unique_ptr<pcb::pcb_data_if>             produce_data(const std::string &type, const nlohmann::json &json_obj);
+    static std::unique_ptr<pcb::pcb_data>             produce_data(const std::string &type, const nlohmann::json &json_obj);
     /**
      * @brief Factory function for generating data pack's interface config section
      * @param type data pack's type
      * @param json_obj nlohmann::json representing interface config section
-     * @return pointer to interface config's base type (pcb::pcb_interface_config_if*)
+     * @return pointer to interface config's base type (pcb::pcb_interface_config*)
      */
-    static std::unique_ptr<pcb::pcb_interface_config_if> produce_interface_config(const std::string &type, const nlohmann::json &json_obj);
+    static std::unique_ptr<pcb::pcb_interface_config> produce_interface_config(const std::string &type, const nlohmann::json &json_obj);
     /**
      * @brief Conversion function for converting data pack's data section into json
      * @param type data pack's type
      * @param obj pointer to data section
      * @return nlohmann::json obj
      */
-    static nlohmann::json                                data_to_json(const std::string &type, const pcb::pcb_data_if *obj);
+    static nlohmann::json                                data_to_json(const std::string &type, const pcb::pcb_data *obj);
     /**
      * @brief Conversion function for converting data pack's interface config section into json
      * @param type data pack's type
      * @param obj pointer to interface config section
      * @return nlohmann::json obj
      */
-    static nlohmann::json                                interface_config_to_json(const std::string &type, const pcb::pcb_interface_config_if *obj);
+    static nlohmann::json                                interface_config_to_json(const std::string &type, const pcb::pcb_interface_config *obj);
 
 private:
     static std::unordered_map<std::string, data_fact_t>      *data_factory;

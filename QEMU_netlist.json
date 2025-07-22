@@ -1,0 +1,64 @@
+{
+    "PA9": {
+        "HW_UART": {
+            "pin": 2,
+            "function": "TX"
+        }
+    },
+    "PA10": {
+        "HW_UART": {
+            "pin": 1,
+            "function": "RX"
+        }
+    },
+    "PE2": {
+        "MPU-9250_U1": {
+            "pin": 23,
+            "function": "SCLK"
+        },
+        "MPU-9250_U2": {
+            "pin": 23,
+            "function": "SCLK"
+        }
+    },
+    "PE5": {
+        "MPU-9250_U1": {
+            "pin": 9,
+            "function": "MISO"
+        },
+        "MPU-9250_U2": {
+            "pin": 9,
+            "function": "MISO"
+        }
+    },
+    "PE6": {
+        "MPU-9250_U1": {
+            "pin": 24,
+            "function": "MOSI"
+        },
+        "MPU-9250_U2": {
+            "pin": 24,
+            "function": "MOSI"
+        }
+    },
+    "PG13": {
+        "LED1": {
+            "pin": 1,
+            "function": null
+        },
+        "MPU-9250_U1": {
+            "pin": 22,
+            "function": "CS"
+        }
+    },
+    "PG14": {
+        "LED2": {
+            "pin": 1,
+            "function": null
+        },
+        "MPU-9250_U2": {
+            "pin": 22,
+            "function": null
+        }
+    }
+}

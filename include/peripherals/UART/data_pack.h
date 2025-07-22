@@ -22,7 +22,7 @@ enum Stop_Bits {
 };
 }
 
-class UART_interface_config : public pcb::pcb_interface_config_if {
+class UART_interface_config : public pcb::pcb_interface_config {
 public:
     UART_interface_config() = default;
     UART_interface_config(int              baud_rate,
@@ -45,7 +45,7 @@ public:
 void from_json(const nlohmann::json &j, UART_interface_config &o);
 void to_json(nlohmann::json &j, const UART_interface_config &o);
 
-class UART_data : public pcb::pcb_data_if {
+class UART_data : public pcb::pcb_data {
 public:
     UART_data()  = default;
     ~UART_data() = default;

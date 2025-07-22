@@ -42,21 +42,21 @@ Data_Config_Factory::Data_Config_Factory(const std::string &type, data_fact_t da
     interface_config_converter->insert_or_assign(type, inte_conf_json);
 }
 
-std::unique_ptr<pcb::pcb_data_if> Data_Config_Factory::produce_data(const std::string &type, const nlohmann::json &json_obj)
+std::unique_ptr<pcb::pcb_data> Data_Config_Factory::produce_data(const std::string &type, const nlohmann::json &json_obj)
 {
     if (!data_factory || !data_factory->count(type)) {
         throw std::out_of_range("Factory function for type: \"" + type + "\" does not exists!");
     }
     return data_factory->at(type)(json_obj);
 }
-std::unique_ptr<pcb::pcb_interface_config_if> Data_Config_Factory::produce_interface_config(const std::string &type, const nlohmann::json &json_obj)
+std::unique_ptr<pcb::pcb_interface_config> Data_Config_Factory::produce_interface_config(const std::string &type, const nlohmann::json &json_obj)
 {
     if (!interface_config_factory || !interface_config_factory->count(type)) {
         throw std::out_of_range("Factory function for type: \"" + type + "\" does not exists!");
     }
     return interface_config_factory->at(type)(json_obj);
 }
-nlohmann::json Data_Config_Factory::data_to_json(const std::string &type, const pcb::pcb_data_if *obj)
+nlohmann::json Data_Config_Factory::data_to_json(const std::string &type, const pcb::pcb_data *obj)
 {
     if (!data_converter || !data_converter->count(type)) {
         throw std::out_of_range("Converter function for type: \"" + type + "\" does not exists!");
@@ -64,7 +64,7 @@ nlohmann::json Data_Config_Factory::data_to_json(const std::string &type, const 
     return data_converter->at(type)(obj);
 }
 
-nlohmann::json Data_Config_Factory::interface_config_to_json(const std::string &type, const pcb::pcb_interface_config_if *obj)
+nlohmann::json Data_Config_Factory::interface_config_to_json(const std::string &type, const pcb::pcb_interface_config *obj)
 {
     if (!interface_config_converter || !interface_config_converter->count(type)) {
         throw std::out_of_range("Converter function for type: \"" + type + "\" does not exists!");

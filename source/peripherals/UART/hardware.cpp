@@ -15,7 +15,7 @@ static inline bool is_high(const sc_dt::sc_logic &v)
 void UART_Hardware::run()
 {
     txd.write(sc_dt::sc_logic_1);
-    trace_clk.write(sc_logic_1);
+    debugt_trace_clk.write(sc_logic_1);
     wait(SC_ZERO_TIME);
 
     Report_Info(SC_DEBUG, name(), "pin initialized");
@@ -30,7 +30,8 @@ void UART_Hardware::run()
 
         sc_time next_sample = sc_time_stamp() + 1.5 * baud_period;
 
-        trace_clk.write(sc_logic_0);
+        debugt_trace_clk.write(sc_logic_0);
+        txd.write(sc_logic_0);
         /* 2) 對準 bit#0 中點（+1.5 bit */
         wait(next_sample - sc_time_stamp());
 
@@ -41,7 +42,7 @@ void UART_Hardware::run()
             bool val = is_high(rxd->read());
             rx_byte |= (val << i);
             txd.write(val ? sc_logic_1 : sc_logic_0);
-            trace_clk.write(trace_clk.read() == sc_logic_Z ? sc_logic_X : sc_logic_Z);
+            debugt_trace_clk.write(debugt_trace_clk.read() == sc_logic_Z ? sc_logic_X : sc_logic_Z);
 
             /* 下一取樣點 */
             next_sample += baud_period;
@@ -52,7 +53,8 @@ void UART_Hardware::run()
         if (rxd->read() != sc_logic_1) {
             SC_REPORT_WARNING("UART", "framing error: stop bit not found!");
         }
-        trace_clk.write(sc_logic_1);
+        debugt_trace_clk.write(sc_logic_1);
+        txd.write(sc_logic_1);
 
         Report_Info(SC_FULL, name(), "UART read 0x%x, ascii: %c", rx_byte, rx_byte);
     }

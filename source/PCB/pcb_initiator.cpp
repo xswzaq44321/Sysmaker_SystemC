@@ -84,9 +84,16 @@ void PCB_Initiator::trans_to_slave(std::string json_str)
     }
     auto *trans = it->get();
 
-    tlm::tlm_phase   phase  = tlm::BEGIN_REQ;
-    sc_core::sc_time delay  = trans->get_begin_time() ? *trans->get_begin_time() - sc_time_stamp() : SC_ZERO_TIME;
-    auto             status = socket->nb_transport_fw(*trans, phase, delay);
+    tlm::tlm_phase   phase = tlm::BEGIN_REQ;
+    sc_core::sc_time delay = SC_ZERO_TIME;
+    if (trans->get_begin_time()) {
+        if (*trans->get_begin_time() < sc_time_stamp()) {
+            SC_REPORT_WARNING(name(), "Current transaction is running late!");
+        } else {
+            delay = *trans->get_begin_time() - sc_time_stamp();
+        }
+    }
+    auto status = socket->nb_transport_fw(*trans, phase, delay);
 
     Report_Info(SC_DEBUG, name()) << phase;
     if (status == tlm::TLM_UPDATED && phase == tlm::END_REQ)

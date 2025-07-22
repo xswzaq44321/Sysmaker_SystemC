@@ -12,10 +12,7 @@ using json = nlohmann::json;
 
 /*
 {
-    "Pin Configuration": {
-        "PB2": "TX",
-        "PB3": "RX"
-    },
+    ...
     "Baud Rate": 9600,
     "Data Bits": 8,
     "Parity Bit": 0,
@@ -24,7 +21,7 @@ using json = nlohmann::json;
 */
 void from_json(const nlohmann::json &j, UART_interface_config &o)
 {
-    o.pin_config = j.at("Pin Configuration").get<pcb::pin_config_t>();
+    o.from_json(j);
     o.baud_rate  = j.at("Baud Rate").get<int>();
     o.data_bits  = static_cast<UART::Data_Bits>(j.at("Data Bits").get<int>());
     o.parity_bit = static_cast<UART::Parity_Bit>(j.at("Parity Bit").get<int>());
@@ -32,49 +29,54 @@ void from_json(const nlohmann::json &j, UART_interface_config &o)
 }
 void to_json(nlohmann::json &j, const UART_interface_config &o)
 {
-    j = json::object({
-        { "Pin Configuration", o.pin_config },
+    o.to_json(j);
+    auto tmp = json::object({
         { "Baud Rate", o.baud_rate },
         { "Data Bits", o.data_bits },
         { "Parity Bit", o.parity_bit },
         { "Stop Bits", o.stop_bits },
     });
+    j.update(tmp, true);
 }
 
 /*
-    {
-        "TX": [104, 101, 108, 108, 111, 44, 32, 119, 111, 114, 108, 100],
-        "RX": []
-    }
+{
+    ...
+    "TX": [104, 101, 108, 108, 111, 44, 32, 119, 111, 114, 108, 100],
+    "RX": []
+}
 */
 void from_json(const nlohmann::json &j, UART_data &o)
 {
+    o.from_json(j);
     o.tx = j.at("TX").get<std::vector<uint8_t>>();
     o.rx = j.at("RX").get<std::vector<uint8_t>>();
 }
 void to_json(nlohmann::json &j, const UART_data &o)
 {
-    j = json::object({
+    o.to_json(j);
+    auto tmp = json::object({
         { "TX", o.tx },
         { "RX", o.rx },
     });
+    j.update(tmp, true);
 }
 
-static std::unique_ptr<pcb::pcb_data_if> uart_data_factory(const nlohmann::json &raw_data)
+static std::unique_ptr<pcb::pcb_data> uart_data_factory(const nlohmann::json &raw_data)
 {
     auto obj = std::make_unique<UART_data>(raw_data.get<UART_data>());
     // Here you can do some content checking
 
     return obj;
 }
-static std::unique_ptr<pcb::pcb_interface_config_if> uart_interface_config_factory(const nlohmann::json &raw_data)
+static std::unique_ptr<pcb::pcb_interface_config> uart_interface_config_factory(const nlohmann::json &raw_data)
 {
     auto obj = std::make_unique<UART_interface_config>(raw_data.get<UART_interface_config>());
     // Here you can do some content checking
 
     return obj;
 }
-static nlohmann::json uart_data_to_json(const pcb::pcb_data_if *obj)
+static nlohmann::json uart_data_to_json(const pcb::pcb_data *obj)
 {
     const UART_data *o = dynamic_cast<const UART_data *>(obj);
     if (!o) {
@@ -82,7 +84,7 @@ static nlohmann::json uart_data_to_json(const pcb::pcb_data_if *obj)
     }
     return json(*o);
 }
-static nlohmann::json uart_interface_config_to_json(const pcb::pcb_interface_config_if *obj)
+static nlohmann::json uart_interface_config_to_json(const pcb::pcb_interface_config *obj)
 {
     const UART_interface_config *o = dynamic_cast<const UART_interface_config *>(obj);
     if (!o) {

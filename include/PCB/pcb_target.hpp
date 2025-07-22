@@ -79,8 +79,8 @@ private:
             hw_access(trans, phase);
         } else if (phase == tlm::END_RESP) {
             /* TODO: remove this */
-            Report_Info(sc_core::SC_MEDIUM, name(), "ending simulation");
-            sc_core::sc_stop();
+            // Report_Info(sc_core::SC_MEDIUM, name(), "ending simulation");
+            // sc_core::sc_stop();
         }
     }
     void done_peq_cb(pcb::pcb_payload &trans, const tlm::tlm_phase &phase)

@@ -30,7 +30,11 @@
                         "9": "MISO",
                         "24": "MOSI",
                         "22": "CS"
-                    }
+                    },
+                    "Clock Frequency": 4000000,
+                    "SPI Mode": 3,
+                    "Bit Order": "MSB",
+                    "Data Size": 8
                 }
             }
         ],
@@ -41,31 +45,10 @@
             "22": "PG13"
         }
     },
-    "MPU-9250_U2": {
-        "components": [
-            {
-                "type": "SPI",
-                "Interface Configuration": {
-                    "Pin Configuration": {
-                        "23": "SCLK",
-                        "9": "MISO",
-                        "24": "MOSI",
-                        "22": "CS"
-                    }
-                }
-            }
-        ],
-        "pin_to_trace": {
-            "23": "PE2",
-            "9": "PE5",
-            "24": "PE6",
-            "22": "PG14"
-        }
-    },
     "LED1": {
         "components": [
             {
-                "type": "GPIO",
+                "type": "PCB",
                 "Interface Configuration": {
                     "Pin Configuration": {
                         "1": null
@@ -80,7 +63,7 @@
     "LED2": {
         "components": [
             {
-                "type": "GPIO",
+                "type": "PCB",
                 "Interface Configuration": {
                     "Pin Configuration": {
                         "1": null

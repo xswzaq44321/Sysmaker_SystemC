@@ -71,7 +71,7 @@ private:
         tx.tlm_route.targ = vid;
         if (vid == -1) {
             std::string buf = "No such target with pins(" + tx.get_pins().to_string() + ") found!";
-            SC_REPORT_WARNING("SPI_Interconnect", buf.c_str());
+            SC_REPORT_WARNING("PCB_Interconnect", buf.c_str());
             return tlm::tlm_sync_enum::TLM_COMPLETED;
         }
         return init_socket[vid]->nb_transport_fw(tx, ph, delay);

@@ -7,7 +7,7 @@ using namespace sc_core;
 
 static void intHandler(int intid)
 {
-    cout << "Interrupted\n";
+    cout << "Interrupted @ " << sc_time_stamp() << endl;
     sc_stop();
 }
 

@@ -5,7 +5,7 @@ using namespace sc_core;
 using namespace sc_dt;
 using json = nlohmann::json;
 
-UART_Driver::UART_Driver(sc_module_name name, const pcb::pin_config_t &pin_config, const UART_interface_config &ic)
+UART_Driver::UART_Driver(sc_module_name name, const pcb::pin_config_t &pin_config, const pcb::pcb_interface_config &ic)
     : PCB_Target_IF(name, pin_config)
     , uart_peq("uart_peq")
 {
@@ -33,8 +33,8 @@ UART_Driver::UART_Driver(sc_module_name name, const pcb::pin_config_t &pin_confi
 
     sc_trace(tf, *rxd, std::string(this->name()) + ".RX");
     sc_trace(tf, *txd, std::string(this->name()) + ".TX");
-    sc_trace(tf, trace_clk, std::string(this->name()) + ".trace_clk");
-    sc_trace(tf, hardware->trace_clk, std::string(this->name()) + ".hw_trace_clk");
+    sc_trace(tf, debug_trace_clk, std::string(this->name()) + ".debug_trace_clk");
+    sc_trace(tf, hardware->debugt_trace_clk, std::string(this->name()) + ".hw_trace_clk");
 }
 
 void UART_Driver::hw_access(pcb::pcb_payload &trans, const tlm::tlm_phase &phase)
@@ -52,7 +52,7 @@ void UART_Driver::run()
 {
     rxd->write(sc_dt::sc_logic_Z);
     txd->write(sc_dt::sc_logic_1);
-    trace_clk.write(sc_logic_1);
+    debug_trace_clk.write(sc_logic_1);
     wait(SC_ZERO_TIME);
 
     Report_Info(SC_DEBUG, name(), "pin initialized");
@@ -69,8 +69,8 @@ void UART_Driver::run()
         std::string rx_pin = pin_config.func_to_pin("RX");
         if (ic->pin_config[tx_pin] != "TX" || ic->pin_config[rx_pin] != "RX") {
             SC_REPORT_WARNING(name(), "TX and RX pin misconfigured!");
-            hw_access_done_peq.notify(*trans, tlm::tlm_phase_enum::BEGIN_RESP);
-            continue;
+            // hw_access_done_peq.notify(*trans, tlm::tlm_phase_enum::BEGIN_RESP);
+            // continue;
         }
 
         int     baud_rate = ic->baud_rate;
@@ -81,14 +81,14 @@ void UART_Driver::run()
             sc_time next_sample = sc_time_stamp() + baud_period;
             // start bit, always low
             txd->write(sc_logic_0);
-            trace_clk.write(sc_logic_0);
+            debug_trace_clk.write(sc_logic_0);
             // Report_Info(SC_DEBUG, name(), "[%s]: UART start-bit write %c", sc_time_stamp().to_string().c_str(), '0');
             wait(next_sample - sc_time_stamp());
 
             // Data bit
             for (int i = 0; i < std::max<int>(data_bits, 8); ++i) {
                 txd->write(((datum >> i) & 1) ? sc_logic_1 : sc_logic_0);
-                trace_clk.write(trace_clk.read() == sc_logic_Z ? sc_logic_X : sc_logic_Z);
+                debug_trace_clk.write(debug_trace_clk.read() == sc_logic_Z ? sc_logic_X : sc_logic_Z);
                 // Report_Info(SC_DEBUG, name(), "[%s]: UART write %c", sc_time_stamp().to_string().c_str(), ((datum >> i) & 1) ? '1' : '0');
                 next_sample += baud_period;
                 wait(next_sample - sc_time_stamp());
@@ -114,7 +114,7 @@ void UART_Driver::run()
 
             // stop bit
             txd->write(sc_logic_1);
-            trace_clk.write(sc_logic_1);
+            debug_trace_clk.write(sc_logic_1);
             // Report_Info(SC_DEBUG, name(), "[%s]: UART stop-bit write %c", sc_time_stamp().to_string().c_str(), '1');
             next_sample += stop_bits * baud_period;
             wait(next_sample - sc_time_stamp());
