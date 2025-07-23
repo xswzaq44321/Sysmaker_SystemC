@@ -63,7 +63,9 @@ void from_json(const nlohmann::json &j, SPI_data &o)
 {
     o.from_json(j);
     o.mosi = j.at("MOSI").get<vector<uint8_t>>();
-    o.miso = j.at("MISO").get<vector<uint8_t>>();
+    if (j.contains("MISO")) {
+        o.miso = j.at("MISO").get<vector<uint8_t>>();
+    }
 }
 void to_json(nlohmann::json &j, const SPI_data &o)
 {

@@ -43,7 +43,9 @@ void bridge::run()
     }
     std::stringstream ss;
     ss << f.rdbuf();
-    std::string json_str = ss.str();
+    std::string json_str          = ss.str();
+    uint64_t    qemu_netlist_size = json_str.length();
+    send_data(client_obj.server_fd, &qemu_netlist_size, 8);
     send_data(client_obj.server_fd, json_str.data(), json_str.length());
 
     while (client_obj.server_fd != -1) {

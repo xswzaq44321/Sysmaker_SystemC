@@ -124,7 +124,7 @@ void from_json(const json &j, pcb_payload &p)
     if (j.count("beginTime")) {
         p.m_begin_time = std::make_unique<sc_time>(j.at("beginTime").get<std::string>());
     }
-    if (j.count("endTime")) {
+    if (j.count("endTime") && !j.at("endTime").get<std::string>().empty()) {
         p.m_end_time = std::make_unique<sc_time>(j.at("endTime").get<std::string>());
     }
     p.m_type             = j.at("type");

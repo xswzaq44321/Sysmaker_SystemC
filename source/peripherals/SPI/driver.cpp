@@ -85,9 +85,8 @@ void SPI_Driver::run()
         wait(spi_peq.get_event());
         pcb::pcb_payload *trans = spi_peq.get_next_transaction();
 
-        if (trans->get_type() == "PCB") {
-            pcb_behavior(trans);
-        } else if (trans->get_type() == "SPI") {
+        pcb_behavior(trans);
+        if (trans->get_type() == "SPI") {
             spi_behavior(trans);
         }
 
@@ -99,7 +98,7 @@ void SPI_Driver::pcb_behavior(pcb::pcb_payload *trans)
 {
     auto *data = trans->get_data();
     for (const auto &[pin, value] : data->pin_states) {
-        if (!pin_value.count(pin)) {
+        if (!pin_value.count(pin) || pin == "PE5") {
             continue;
         }
         if (value == "5V") {
@@ -164,20 +163,20 @@ void SPI_Driver::spi_behavior(pcb::pcb_payload *trans)
                 bool bit_val = ((tx >> bit) & 0b1);
                 // shifting data out
                 next_sample += half_period;
-                Report_Info(SC_DEBUG, name(), "bit %d - SCLK returned to idle (%d)", bit, cpol);
+                // Report_Info(SC_DEBUG, name(), "bit %d - SCLK returned to idle (%d)", bit, cpol);
                 write_pin(sclk, cpol);
                 wait(DOPD_delay);
-                Report_Info(SC_DEBUG, name(), "bit %d - MOSI set to %d", bit, bit_val);
+                // Report_Info(SC_DEBUG, name(), "bit %d - MOSI set to %d", bit, bit_val);
                 write_pin(mosi, bit_val);
                 wait(next_sample - sc_time_stamp());
 
                 // sampling data in
                 next_sample += half_period;
-                Report_Info(SC_DEBUG, name(), "bit %d - SCLK toggled to %d (sampling edge)", bit, !cpol);
+                // Report_Info(SC_DEBUG, name(), "bit %d - SCLK toggled to %d (sampling edge)", bit, !cpol);
                 write_pin(sclk, !cpol);
                 // wait(DOPD_delay);
                 bool miso_bit = is_high(miso->read());
-                Report_Info(SC_DEBUG, name(), "bit %d - Sampled MISO = %d", bit, miso_bit);
+                // Report_Info(SC_DEBUG, name(), "bit %d - Sampled MISO = %d", bit, miso_bit);
                 rx |= (miso_bit << bit);
                 wait(next_sample - sc_time_stamp());
             }

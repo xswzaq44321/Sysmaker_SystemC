@@ -17,14 +17,9 @@ static inline void write_pin(sc_out_resolved *pin, bool val)
     pin->write(val ? SC_LOGIC_1 : SC_LOGIC_0);
 }
 
-static uint8_t process_rx(uint8_t rx, bool is_first_byte)
+uint8_t SPI_Hardware::process_rx(uint8_t rx, bool is_first_byte)
 {
-    static uint8_t last_addr = 0;
-    static uint8_t regs[256] = {};
-    regs[59]                 = 10;
-    regs[60]                 = 20;
-    regs[61]                 = 30;
-    static bool read_mode    = false;
+    static bool read_mode = false;
     if (is_first_byte) {
         if (rx & 0x80) { // Read
             read_mode = true;
@@ -38,7 +33,23 @@ static uint8_t process_rx(uint8_t rx, bool is_first_byte)
         return regs[last_addr++];
     } else {
         regs[last_addr] = rx;
+        if (last_addr == 28) {
+            // ±2g (00), ±4g (01), ±8g (10), ±16g (11)
+            uint8_t ACCEL_FS_SEL = (rx & 0b11000) >> 3;
+            ACCEL_FS             = 2 << ACCEL_FS_SEL;
+        }
         return 0;
+    }
+}
+
+void SPI_Hardware::sensor_thread()
+{
+    while (true) {
+        int x_val = (9.8 * sin(sc_time_stamp().to_seconds() / 2) / (2 * 9.8)) * 32767;
+        regs[59]  = x_val >> 8;
+        regs[60]  = x_val & 0xF;
+        Report_Info(SC_DEBUG, name(), "sensor reading %d", x_val);
+        wait(sample_clk.posedge_event());
     }
 }
 
@@ -64,10 +75,10 @@ void SPI_Hardware::spi_behavior_thread()
 
     Report_Info(SC_DEBUG, name(), "CS pulled low, hardware begin working");
 
-    tx = rx         = 0;
     bool first_byte = true;
 
     while (true) {
+        rx = 0;
         if (cpha == 0) {
             for (int bit = 7; bit >= 0; --bit) {
                 bool bit_val = ((tx >> bit) & 0b1);
@@ -117,6 +128,7 @@ void SPI_Hardware::spi_behavior_thread()
                 rx |= (mosi_bit << bit);
             }
         }
+        Report_Info(SC_DEBUG, name(), "hardware successfully I/O data: %d / %d", rx, tx);
         tx         = process_rx(rx, first_byte);
         first_byte = false;
     }
